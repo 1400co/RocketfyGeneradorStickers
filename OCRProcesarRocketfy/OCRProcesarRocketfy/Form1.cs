@@ -98,6 +98,7 @@ namespace OCRProcesarRocketfy
 
                     var pedido = new Pedidos
                     {
+                        CodigoRocket = worksheet.Cells[row, 1].Value.ToString(), // Asumiendo que la columna 'Transportadora' es un enum
                         Transporadora = worksheet.Cells[row, 30].Value.ToString(), // Asumiendo que la columna 'Transportadora' es un enum
                         NumeroGuia = worksheet.Cells[row, 2].Value.ToString(),
                         CodigoConvenio = "901195703-4 (87622)", // Este valor no se encuentra en el excel según lo proporcionado
@@ -182,7 +183,7 @@ namespace OCRProcesarRocketfy
 
                     PdfPCell cell;
 
-                    cell = new PdfPCell(new Phrase($"Transportadora: {pedido.Transporadora}\nNúmero de guía: {pedido.NumeroGuia}\nCódigo de convenio: {pedido.CodigoConvenio}\n", FontFactory.GetFont(FontFactory.TIMES_ROMAN, 8)));
+                    cell = new PdfPCell(new Phrase($"Transportadora: {pedido.Transporadora}\nNúmero de guía: {pedido.NumeroGuia}\nCódigo de convenio: {pedido.CodigoConvenio}\nCódigo de Rocket: {pedido.CodigoRocket}\n", FontFactory.GetFont(FontFactory.TIMES_ROMAN, 8)));
                     cell.Colspan = 2;
                     table.AddCell(cell);
 
