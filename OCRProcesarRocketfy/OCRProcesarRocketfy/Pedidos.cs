@@ -4,7 +4,6 @@ namespace OCRProcesarRocketfy
 {
     public class Pedidos
     {
-        //public Transportadoras Transporadora { get; set; }
         public string CodigoRocket { get; set; }
         public string Transporadora { get; set; }
         public string NumeroGuia { get; set; }

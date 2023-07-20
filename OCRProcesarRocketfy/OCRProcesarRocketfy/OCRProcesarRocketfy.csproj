@@ -102,6 +102,7 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="GeneradorFormatos.cs" />
     <Compile Include="Pedidos.cs" />
     <Compile Include="ProcesarGuias.cs" />
     <Compile Include="Program.cs" />

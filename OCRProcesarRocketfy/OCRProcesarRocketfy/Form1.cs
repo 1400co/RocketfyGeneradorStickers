@@ -5,7 +5,6 @@ using iTextSharp.text.pdf;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
 
@@ -13,13 +12,38 @@ namespace OCRProcesarRocketfy
 {
     public partial class Form1 : Form
     {
+
+
+
         public Form1()
         {
             InitializeComponent();
         }
 
+        private string ObtenerNumeroVendedor(string nombreTienda)
+        {
+            var tiendas = new Dictionary<string, string>()
+                        {
+                            { "explora ofertas", "3184275096" },
+                            { "verdesalud", "3213903769" },
+                            { "jovenesparasiempre", "3185083892" },
+                        };
+
+            if (tiendas.ContainsKey(nombreTienda.ToLower()))
+            {
+                return tiendas[nombreTienda.ToLower()];
+            }
+            else
+            {
+                return "3188426287";
+            }
+        }
+
+
         private void button1_Click(object sender, EventArgs e)
         {
+
+
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Archivos Excel (*.xlsx)|*.xlsx";
             var pedidos = new List<Pedidos>();
@@ -39,12 +63,17 @@ namespace OCRProcesarRocketfy
             dgPedidos.DataSource = pedidos;
 
             var exeLocation = AppDomain.CurrentDomain.BaseDirectory;
-            var pdfFilePath = System.IO.Path.Combine(exeLocation, "pedidos.pdf");
+            var pdfGuiasImprimir = System.IO.Path.Combine(exeLocation, "pedidos.pdf");
+            var pdfRelacionDespacho = System.IO.Path.Combine(exeLocation, "relacionDespacho.pdf");
 
-            this.CreatePdfReport(pedidos, pdfFilePath);
+            this.CreatePdfReportSticker(pedidos, pdfGuiasImprimir);
+            var generador = new GeneradorFormatos();
+            generador.GenerarFormatoDespacho(pedidos, pdfRelacionDespacho);
+
 
             // Para abrir el archivo después de generarlo
-            System.Diagnostics.Process.Start(pdfFilePath);
+            System.Diagnostics.Process.Start(pdfGuiasImprimir);
+            System.Diagnostics.Process.Start(pdfRelacionDespacho);
 
         }
 
@@ -69,12 +98,17 @@ namespace OCRProcesarRocketfy
             dgPedidos.DataSource = pedidos;
 
             var exeLocation = AppDomain.CurrentDomain.BaseDirectory;
-            var pdfFilePath = System.IO.Path.Combine(exeLocation, "pedidos.pdf");
+            var pdfGuiasImprimir = System.IO.Path.Combine(exeLocation, "pedidos.pdf");
+            var pdfRelacionDespacho = System.IO.Path.Combine(exeLocation, "relacionDespacho.pdf");
 
-            this.CreatePdfReportCarta(pedidos, pdfFilePath);
+            this.CreatePdfReportCarta(pedidos, pdfGuiasImprimir);
+
+            var generador = new GeneradorFormatos();
+            generador.GenerarFormatoDespacho(pedidos, pdfRelacionDespacho);
 
             // Para abrir el archivo después de generarlo
-            System.Diagnostics.Process.Start(pdfFilePath);
+            System.Diagnostics.Process.Start(pdfGuiasImprimir);
+            System.Diagnostics.Process.Start(pdfRelacionDespacho);
         }
 
         public List<Pedidos> LeerPedidosDeExcel(string filePath)
@@ -101,13 +135,13 @@ namespace OCRProcesarRocketfy
                         CodigoRocket = worksheet.Cells[row, 1].Value.ToString(), // Asumiendo que la columna 'Transportadora' es un enum
                         Transporadora = worksheet.Cells[row, 30].Value.ToString(), // Asumiendo que la columna 'Transportadora' es un enum
                         NumeroGuia = worksheet.Cells[row, 2].Value.ToString(),
-                        CodigoConvenio = "901195703-4 (87622)", // Este valor no se encuentra en el excel según lo proporcionado
+                        CodigoConvenio = "901195703-4 (87622/89573)", // Este valor no se encuentra en el excel según lo proporcionado
                         DepartamentoRemitente = "SANTANDER", // Este valor no se encuentra en el excel según lo proporcionado
                         CiudadRemitente = "FLORIDABLANCA", // Este valor no se encuentra en el excel según lo proporcionado
                         NombreRemitente = $"Natutrend ({worksheet.Cells[row, 31].Value})",
                         EmailRemitente = worksheet.Cells[row, 13].Value.ToString(),
                         DireccionRemitente = "Cra 6 # 7 - 06 apto 403 edificio rayenaris", // Este valor no se encuentra en el excel según lo proporcionado
-                        TelefonoRemitente = "3188426287",
+                        TelefonoRemitente = ObtenerNumeroVendedor(worksheet.Cells[row, 29].Value.ToString()),
                         DepartamentoDestino = worksheet.Cells[row, 17].Value.ToString(),
                         CiudadDestino = worksheet.Cells[row, 16].Value.ToString(),
                         NombreDestino = worksheet.Cells[row, 11].Value.ToString(),
@@ -126,39 +160,7 @@ namespace OCRProcesarRocketfy
             return pedidos;
         }
 
-
-        private void ExtractTextFromPdf(string filePath)
-        {
-            //try
-            //{
-
-            //    List<Pedidos> listaPedidos = new List<Pedidos>();
-
-            //    using (PdfReader reader = new PdfReader(filePath))
-            //    {
-            //        int pageCount = reader.NumberOfPages;
-
-            //        for (int i = 1; i <= pageCount; i++)
-            //        {
-            //            string pageText = PdfTextExtractor.GetTextFromPage(reader, i);
-            //            var result = ProcessPageText(pageText);
-            //            if (result != null) { listaPedidos.Add(result); }
-            //        }
-            //    }
-
-            //    dgPedidos.DataSource = listaPedidos;
-
-            //    MessageBox.Show("Extracción de texto y creación de reporte completadas.");
-
-            //    MessageBox.Show("Extracción de texto completada.");
-            //}
-            //catch (Exception ex)
-            //{
-            //    MessageBox.Show("Error al extraer texto del PDF: " + ex.Message);
-            //}
-        }
-
-        public void CreatePdfReport(List<Pedidos> listaPedidos, string pdfPath)
+        public void CreatePdfReportSticker(List<Pedidos> listaPedidos, string pdfPath)
         {
             // Calcula el tamaño de la página en puntos (paisaje)
             Rectangle pageSize = new Rectangle(ConvertToPoint(10), ConvertToPoint(8));
@@ -305,48 +307,6 @@ namespace OCRProcesarRocketfy
             return cm * 28.35f;
         }
 
-        private Pedidos ProcessPageText(string pageText)
-        {
-            var result = this.AnalizarPagina(pageText);
-
-            ProcesarGuias procesarGuias = new ProcesarGuias();
-
-            switch (result)
-            {
-                case Transportadoras.Tcc:
-                    return procesarGuias.ProcesarTCC(pageText);
-                    break;
-                case Transportadoras.Servientrega:
-                    return procesarGuias.ProcesarServiEntrega(pageText);
-                    break;
-                case Transportadoras.Interrapidisimo:
-                    return procesarGuias.ProcesarInter(pageText);
-                    break;
-                case Transportadoras.Ninguna:
-                    return null;
-                    break;
-                default:
-                    return null;
-                    break;
-            }
-
-
-        }
-
-        private Transportadoras AnalizarPagina(string textoOcr)
-        {
-            if (textoOcr.Contains("GLOBAL MENSAJERIA S.A.S"))
-                return Transportadoras.Tcc;
-
-            if (textoOcr.Contains("Servientrega S.A NIT"))
-                return Transportadoras.Servientrega;
-
-            if (textoOcr.Contains("www.interrapidisimo.com"))
-                return Transportadoras.Interrapidisimo;
-
-
-            return Transportadoras.Ninguna;
-        }
 
 
     }
