@@ -62,9 +62,11 @@ namespace OCRProcesarRocketfy
 
             dgPedidos.DataSource = pedidos;
 
+            var nombreTienda = openFileDialog.FileName.Contains("comerciolocal") ? "Natutrends" : "Edwin";
+
             var exeLocation = AppDomain.CurrentDomain.BaseDirectory;
-            var pdfGuiasImprimir = System.IO.Path.Combine(exeLocation, "pedidos.pdf");
-            var pdfRelacionDespacho = System.IO.Path.Combine(exeLocation, "relacionDespacho.pdf");
+            var pdfGuiasImprimir = System.IO.Path.Combine(exeLocation, $"pedidos_{nombreTienda}_{DateTime.Now.ToString("ddMMyyyy")}.pdf");
+            var pdfRelacionDespacho = System.IO.Path.Combine(exeLocation, $"relacionDespacho_{nombreTienda}_{DateTime.Now.ToString("ddMMyyyy")}.pdf");
 
             this.CreatePdfReportSticker(pedidos, pdfGuiasImprimir);
             var generador = new GeneradorFormatos();
@@ -133,24 +135,24 @@ namespace OCRProcesarRocketfy
                     var pedido = new Pedidos
                     {
                         CodigoRocket = worksheet.Cells[row, 1].Value.ToString(), // Asumiendo que la columna 'Transportadora' es un enum
-                        Transporadora = worksheet.Cells[row, 30].Value.ToString(), // Asumiendo que la columna 'Transportadora' es un enum
+                        Transporadora = worksheet.Cells[row, 31].Value.ToString(), // Asumiendo que la columna 'Transportadora' es un enum
                         NumeroGuia = worksheet.Cells[row, 2].Value.ToString(),
                         CodigoConvenio = "901195703-4 (87622/89573)", // Este valor no se encuentra en el excel según lo proporcionado
                         DepartamentoRemitente = "SANTANDER", // Este valor no se encuentra en el excel según lo proporcionado
                         CiudadRemitente = "FLORIDABLANCA", // Este valor no se encuentra en el excel según lo proporcionado
-                        NombreRemitente = $"Natutrend ({worksheet.Cells[row, 31].Value})",
-                        EmailRemitente = worksheet.Cells[row, 13].Value.ToString(),
+                        NombreRemitente = $"Natutrend ({worksheet.Cells[row, 30].Value})",
+                        EmailRemitente = worksheet.Cells[row, 14].Value.ToString(),
                         DireccionRemitente = "Cra 6 # 7 - 06 apto 403 edificio rayenaris", // Este valor no se encuentra en el excel según lo proporcionado
-                        TelefonoRemitente = ObtenerNumeroVendedor(worksheet.Cells[row, 29].Value.ToString()),
-                        DepartamentoDestino = worksheet.Cells[row, 17].Value.ToString(),
-                        CiudadDestino = worksheet.Cells[row, 16].Value.ToString(),
-                        NombreDestino = worksheet.Cells[row, 11].Value.ToString(),
-                        EmailDestino = worksheet.Cells[row, 13].Value.ToString(),
-                        DireccionDestino = worksheet.Cells[row, 15].Value.ToString(),
-                        BarrioDestino = worksheet.Cells[row, 18].Value.ToString(),
-                        TelefonoDestino = worksheet.Cells[row, 12].Value.ToString(),
-                        Observaciones = worksheet.Cells[row, 20].Value.ToString(), // Este valor no se encuentra en el excel según lo proporcionado
-                        ValorPagar = "$" + worksheet.Cells[row, 25].Value.ToString(),
+                        TelefonoRemitente = ObtenerNumeroVendedor(worksheet.Cells[row, 30].Value.ToString()),
+                        DepartamentoDestino = worksheet.Cells[row, 18].Value.ToString(),
+                        CiudadDestino = worksheet.Cells[row, 17].Value.ToString(),
+                        NombreDestino = worksheet.Cells[row, 12].Value.ToString(),
+                        EmailDestino = worksheet.Cells[row, 14].Value.ToString(),
+                        DireccionDestino = worksheet.Cells[row, 16].Value.ToString(),
+                        BarrioDestino = worksheet.Cells[row, 19].Value.ToString(),
+                        TelefonoDestino = worksheet.Cells[row, 13].Value.ToString(),
+                        Observaciones = worksheet.Cells[row, 21].Value.ToString(), // Este valor no se encuentra en el excel según lo proporcionado
+                        ValorPagar = "$" + worksheet.Cells[row, 26].Value.ToString(),
                     };
 
                     pedidos.Add(pedido);
