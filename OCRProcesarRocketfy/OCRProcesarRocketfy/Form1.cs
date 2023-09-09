@@ -6,6 +6,7 @@ using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace OCRProcesarRocketfy
@@ -135,7 +136,7 @@ namespace OCRProcesarRocketfy
                     var pedido = new Pedidos
                     {
                         CodigoRocket = worksheet.Cells[row, 1].Value.ToString(), // Asumiendo que la columna 'Transportadora' es un enum
-                        Transporadora = worksheet.Cells[row, 31].Value.ToString(), // Asumiendo que la columna 'Transportadora' es un enum
+                        Transporadora = worksheet.Cells[row, 34].Value.ToString(), // Asumiendo que la columna 'Transportadora' es un enum
                         NumeroGuia = worksheet.Cells[row, 2].Value.ToString(),
                         CodigoConvenio = "901195703-4 (87622/89573)", // Este valor no se encuentra en el excel según lo proporcionado
                         DepartamentoRemitente = "SANTANDER", // Este valor no se encuentra en el excel según lo proporcionado
@@ -143,7 +144,7 @@ namespace OCRProcesarRocketfy
                         NombreRemitente = $"Natutrend ({worksheet.Cells[row, 30].Value})",
                         EmailRemitente = worksheet.Cells[row, 14].Value.ToString(),
                         DireccionRemitente = "Cra 6 # 7 - 06 apto 403 edificio rayenaris", // Este valor no se encuentra en el excel según lo proporcionado
-                        TelefonoRemitente = ObtenerNumeroVendedor(worksheet.Cells[row, 30].Value.ToString()),
+                        TelefonoRemitente = ObtenerNumeroVendedor(worksheet.Cells[row, 32].Value.ToString()),
                         DepartamentoDestino = worksheet.Cells[row, 18].Value.ToString(),
                         CiudadDestino = worksheet.Cells[row, 17].Value.ToString(),
                         NombreDestino = worksheet.Cells[row, 12].Value.ToString(),
@@ -155,7 +156,14 @@ namespace OCRProcesarRocketfy
                         ValorPagar = "$" + worksheet.Cells[row, 26].Value.ToString(),
                     };
 
-                    pedidos.Add(pedido);
+                    if (pedidos.Any(x => x.CodigoRocket == pedido.CodigoRocket))
+                    {
+                        var pedidoExistente = pedidos.First(x => x.CodigoRocket == pedido.CodigoRocket);
+                        pedidoExistente.Observaciones += " " + pedido.Observaciones; // Concatenar observaciones
+                    }
+
+                    if (!pedidos.Any(x => x.CodigoRocket == pedido.CodigoRocket))
+                        pedidos.Add(pedido);
                 }
             }
 
@@ -187,7 +195,7 @@ namespace OCRProcesarRocketfy
 
                     PdfPCell cell;
 
-                    cell = new PdfPCell(new Phrase($"Transportadora: {pedido.Transporadora}\nNúmero de guía: {pedido.NumeroGuia}\nCódigo de convenio: {pedido.CodigoConvenio}\nCódigo de Rocket: {pedido.CodigoRocket}\n", FontFactory.GetFont(FontFactory.TIMES_ROMAN, 8)));
+                    cell = new PdfPCell(new Phrase($"Transportadora: {pedido.Transporadora} - {DateTime.Now.ToShortDateString()} \nNúmero de guía: {pedido.NumeroGuia}\nCódigo de convenio: {pedido.CodigoConvenio}\nCódigo de Rocket: {pedido.CodigoRocket}\n", FontFactory.GetFont(FontFactory.TIMES_ROMAN, 8)));
                     cell.Colspan = 2;
                     table.AddCell(cell);
 
