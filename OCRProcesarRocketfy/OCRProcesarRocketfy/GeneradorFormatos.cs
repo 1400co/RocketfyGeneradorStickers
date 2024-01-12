@@ -88,7 +88,7 @@ namespace OCRProcesarRocketfy
                         table.AddCell(new Phrase(pedido.NombreDestino, FontFactory.GetFont(FontFactory.TIMES_ROMAN, 8)));
                         table.AddCell(new Phrase(pedido.CiudadDestino, FontFactory.GetFont(FontFactory.TIMES_ROMAN, 8)));
                         table.AddCell(new Phrase(pedido.DepartamentoDestino, FontFactory.GetFont(FontFactory.TIMES_ROMAN, 8)));
-                        table.AddCell(new Phrase(pedido.Observaciones, FontFactory.GetFont(FontFactory.TIMES_ROMAN, 8)));
+                        table.AddCell(new Phrase($"{pedido.Observaciones} Cant: {pedido.Cantidad}", FontFactory.GetFont(FontFactory.TIMES_ROMAN, 8)));
                     }
 
                     // Agregar la tabla al documento

@@ -24,6 +24,7 @@ namespace OCRProcesarRocketfy
         public string TelefonoDestino { get; set; }
 
         public string Observaciones { get; set; }
+        public string Cantidad { get; set; }
         public string ValorPagar { get; set; }
 
     }

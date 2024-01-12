@@ -5,6 +5,7 @@ using iTextSharp.text.pdf;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -14,7 +15,7 @@ namespace OCRProcesarRocketfy
     public partial class Form1 : Form
     {
 
-
+        List<Pedidos> pedidos = new List<Pedidos>();
 
         public Form1()
         {
@@ -36,23 +37,53 @@ namespace OCRProcesarRocketfy
             }
             else
             {
-                return "3188426287";
+                return ConfigurationManager.AppSettings["Celular"];
             }
         }
 
+        private string ObtenerConvenio(string transportadora)
+        {
+            var tiendas = new Dictionary<string, string>()
+                        {
+                            { "INTERRAPIDISIMO", ConfigurationManager.AppSettings["CodigoInter"] },
+                            { "ENVIA", ConfigurationManager.AppSettings["CodigoEnvia"] },
+                            { "COORDINADORA", ConfigurationManager.AppSettings["CodigoCoordinadora"] },
+                        };
 
+            if (tiendas.ContainsKey(transportadora.ToUpper()))
+            {
+                return tiendas[transportadora.ToUpper()];
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        /// <summary>
+        /// Leer Pedidos de Rocketfy
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button1_Click(object sender, EventArgs e)
         {
 
-
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Archivos Excel (*.xlsx)|*.xlsx";
-            var pedidos = new List<Pedidos>();
+            var pedidosnuevos = new List<Pedidos>();
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 string filePath = openFileDialog.FileName;
-                pedidos = LeerPedidosDeExcel(filePath);
+
+                if (!openFileDialog.FileName.Contains("exporte_envios"))
+                {
+                    MessageBox.Show("El archivo no es de rocketfy, debe comenzar con el texto -exporte_envios-");
+                    return;
+                }
+
+                pedidosnuevos =  LeerPedidosDeExcelFormatoRocket(filePath);
+
             }
 
             if (pedidos.Count == 0)
@@ -61,25 +92,34 @@ namespace OCRProcesarRocketfy
                 return;
             }
 
-            dgPedidos.DataSource = pedidos;
+            dgPedidos.DataSource = pedidosnuevos;
+            dgPedidos.Invalidate();
+            dgPedidos.Refresh();
+            dgPedidos.Update();
+            
 
-            var nombreTienda = openFileDialog.FileName.Contains("comerciolocal") ? "Natutrends" : "Edwin";
+            //var nombreTienda = openFileDialog.FileName.Contains("comerciolocal") ? "Natutrends" : "Edwin";
 
-            var exeLocation = AppDomain.CurrentDomain.BaseDirectory;
-            var pdfGuiasImprimir = System.IO.Path.Combine(exeLocation, $"pedidos_{nombreTienda}_{DateTime.Now.ToString("ddMMyyyy")}.pdf");
-            var pdfRelacionDespacho = System.IO.Path.Combine(exeLocation, $"relacionDespacho_{nombreTienda}_{DateTime.Now.ToString("ddMMyyyy")}.pdf");
+            //var exeLocation = AppDomain.CurrentDomain.BaseDirectory;
+            //var pdfGuiasImprimir = System.IO.Path.Combine(exeLocation, $"pedidos_{nombreTienda}_{DateTime.Now.ToString("ddMMyyyy")}.pdf");
+            //var pdfRelacionDespacho = System.IO.Path.Combine(exeLocation, $"relacionDespacho_{nombreTienda}_{DateTime.Now.ToString("ddMMyyyy")}.pdf");
 
-            this.CreatePdfReportSticker(pedidos, pdfGuiasImprimir);
-            var generador = new GeneradorFormatos();
-            generador.GenerarFormatoDespacho(pedidos, pdfRelacionDespacho);
+            //this.CreatePdfReportSticker(pedidos, pdfGuiasImprimir);
+            //var generador = new GeneradorFormatos();
+            //generador.GenerarFormatoDespacho(pedidos, pdfRelacionDespacho);
 
 
-            // Para abrir el archivo después de generarlo
-            System.Diagnostics.Process.Start(pdfGuiasImprimir);
-            System.Diagnostics.Process.Start(pdfRelacionDespacho);
+            //// Para abrir el archivo después de generarlo
+            //System.Diagnostics.Process.Start(pdfGuiasImprimir);
+            //System.Diagnostics.Process.Start(pdfRelacionDespacho);
 
         }
 
+        /// <summary>
+        /// Leer pedidos Rocket para imprimir en carta.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button2_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
@@ -89,7 +129,7 @@ namespace OCRProcesarRocketfy
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 string filePath = openFileDialog.FileName;
-                pedidos = LeerPedidosDeExcel(filePath);
+                pedidos = LeerPedidosDeExcelFormatoRocket(filePath);
             }
 
             if (pedidos.Count == 0)
@@ -100,24 +140,22 @@ namespace OCRProcesarRocketfy
 
             dgPedidos.DataSource = pedidos;
 
-            var exeLocation = AppDomain.CurrentDomain.BaseDirectory;
-            var pdfGuiasImprimir = System.IO.Path.Combine(exeLocation, "pedidos.pdf");
-            var pdfRelacionDespacho = System.IO.Path.Combine(exeLocation, "relacionDespacho.pdf");
+            //var exeLocation = AppDomain.CurrentDomain.BaseDirectory;
+            //var pdfGuiasImprimir = System.IO.Path.Combine(exeLocation, "pedidos.pdf");
+            //var pdfRelacionDespacho = System.IO.Path.Combine(exeLocation, "relacionDespacho.pdf");
 
-            this.CreatePdfReportCarta(pedidos, pdfGuiasImprimir);
+            //this.CreatePdfReportCarta(pedidos, pdfGuiasImprimir);
 
-            var generador = new GeneradorFormatos();
-            generador.GenerarFormatoDespacho(pedidos, pdfRelacionDespacho);
+            //var generador = new GeneradorFormatos();
+            //generador.GenerarFormatoDespacho(pedidos, pdfRelacionDespacho);
 
-            // Para abrir el archivo después de generarlo
-            System.Diagnostics.Process.Start(pdfGuiasImprimir);
-            System.Diagnostics.Process.Start(pdfRelacionDespacho);
+            //// Para abrir el archivo después de generarlo
+            //System.Diagnostics.Process.Start(pdfGuiasImprimir);
+            //System.Diagnostics.Process.Start(pdfRelacionDespacho);
         }
 
-        public List<Pedidos> LeerPedidosDeExcel(string filePath)
+        public List<Pedidos> LeerPedidosDeExcelFormatoRocket(string filePath)
         {
-            var pedidos = new List<Pedidos>();
-
             ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
 
             using (var package = new ExcelPackage(new FileInfo(filePath)))
@@ -153,6 +191,7 @@ namespace OCRProcesarRocketfy
                         BarrioDestino = worksheet.Cells[row, 19].Value.ToString(),
                         TelefonoDestino = worksheet.Cells[row, 13].Value.ToString(),
                         Observaciones = worksheet.Cells[row, 21].Value.ToString(), // Este valor no se encuentra en el excel según lo proporcionado
+                        Cantidad = worksheet.Cells[row, 23].Value.ToString(),
                         ValorPagar = "$" + worksheet.Cells[row, 26].Value.ToString(),
                     };
 
@@ -169,6 +208,60 @@ namespace OCRProcesarRocketfy
 
             return pedidos;
         }
+
+        public List<Pedidos> LeerPedidosDeExcelFormatoDropi(string filePath)
+        {
+            var pedidos = new List<Pedidos>();
+
+            ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+
+            using (var package = new ExcelPackage(new FileInfo(filePath)))
+            {
+                var worksheet = package.Workbook.Worksheets[0];
+
+                // Comenzar en la segunda fila (ignorar la primera que es de encabezados)
+                for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
+                {
+                    if (worksheet.Cells[row, 10].Value.ToString() != "GUIA_GENERADA")
+                        continue;
+
+                    var pedido = new Pedidos
+                    {
+                        CodigoRocket = worksheet.Cells[row, 2].Value.ToString(),
+                        Transporadora = worksheet.Cells[row, 16].Value.ToString(),
+                        NumeroGuia = worksheet.Cells[row, 9].Value.ToString(),
+                        CodigoConvenio = this.ObtenerConvenio(worksheet.Cells[row, 16].Value.ToString()), //Cambiar si cambia la transportadora
+                        DepartamentoRemitente = ConfigurationManager.AppSettings["Departamento"],
+                        CiudadRemitente = ConfigurationManager.AppSettings["Ciudad"],
+                        NombreRemitente = ConfigurationManager.AppSettings["NombreTienda"],
+                        EmailRemitente = ConfigurationManager.AppSettings["Email"],
+                        DireccionRemitente = ConfigurationManager.AppSettings["Direccion"],
+                        TelefonoRemitente = ObtenerNumeroVendedor(worksheet.Cells[row, 32].Value.ToString()),
+                        DepartamentoDestino = worksheet.Cells[row, 12].Value.ToString(),
+                        CiudadDestino = worksheet.Cells[row, 13].Value.ToString(),
+                        NombreDestino = worksheet.Cells[row, 6].Value.ToString(),
+                        EmailDestino = worksheet.Cells[row, 8].Value.ToString(),
+                        DireccionDestino = worksheet.Cells[row, 14].Value.ToString(),
+                        BarrioDestino = worksheet.Cells[row, 15].Value.ToString(),
+                        TelefonoDestino = worksheet.Cells[row, 7].Value.ToString(),
+                        Observaciones = "", // Este valor no se encuentra en el excel según lo proporcionado
+                        ValorPagar = "$" + worksheet.Cells[row, 17].Value.ToString(),
+                    };
+
+                    if (pedidos.Any(x => x.CodigoRocket == pedido.CodigoRocket))
+                    {
+                        var pedidoExistente = pedidos.First(x => x.CodigoRocket == pedido.CodigoRocket);
+                        pedidoExistente.Observaciones += " " + pedido.Observaciones; // Concatenar observaciones
+                    }
+
+                    if (!pedidos.Any(x => x.CodigoRocket == pedido.CodigoRocket))
+                        pedidos.Add(pedido);
+                }
+            }
+
+            return pedidos;
+        }
+
 
         public void CreatePdfReportSticker(List<Pedidos> listaPedidos, string pdfPath)
         {
@@ -195,7 +288,7 @@ namespace OCRProcesarRocketfy
 
                     PdfPCell cell;
 
-                    cell = new PdfPCell(new Phrase($"Transportadora: {pedido.Transporadora} - {DateTime.Now.ToShortDateString()} \nNúmero de guía: {pedido.NumeroGuia}\nCódigo de convenio: {pedido.CodigoConvenio}\nCódigo de Rocket: {pedido.CodigoRocket}\n", FontFactory.GetFont(FontFactory.TIMES_ROMAN, 8)));
+                    cell = new PdfPCell(new Phrase($"Transportadora: {pedido.Transporadora} - {DateTime.Now.ToShortDateString()} \nNúmero de guía: {pedido.NumeroGuia}\nCódigo de convenio: {pedido.CodigoConvenio}\nCódigo de plataforma: {pedido.CodigoRocket}\n", FontFactory.GetFont(FontFactory.TIMES_ROMAN, 8)));
                     cell.Colspan = 2;
                     table.AddCell(cell);
 
@@ -219,7 +312,7 @@ namespace OCRProcesarRocketfy
                     cell = new PdfPCell(new Phrase($"Destinatario: {pedido.NombreDestino} ({pedido.EmailDestino})\nDirección de destino: {pedido.DireccionDestino}, {pedido.CiudadDestino}, {pedido.DepartamentoDestino}\nTeléfono de destino: {pedido.TelefonoDestino}", FontFactory.GetFont(FontFactory.TIMES_ROMAN, 8)));
                     table.AddCell(cell);
 
-                    cell = new PdfPCell(new Phrase($"Observaciones: {pedido.Observaciones}\nValor a pagar: {pedido.ValorPagar}", FontFactory.GetFont(FontFactory.TIMES_ROMAN, 8)));
+                    cell = new PdfPCell(new Phrase($"Observaciones: {pedido.Observaciones} Cantidad: {pedido.Cantidad} \nValor a pagar: {pedido.ValorPagar}", FontFactory.GetFont(FontFactory.TIMES_ROMAN, 8)));
                     cell.Colspan = 2;
                     table.AddCell(cell);
 
@@ -317,7 +410,76 @@ namespace OCRProcesarRocketfy
             return cm * 28.35f;
         }
 
+        /// <summary>
+        /// Leer pedidos de dropi
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button3_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Archivos Excel (*.xlsx)|*.xlsx";
+            //var pedidos = new List<Pedidos>();
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string filePath = openFileDialog.FileName;
+
+                if (!openFileDialog.FileName.Contains("ordenes"))
+                {
+                    MessageBox.Show("El archivo no es de dropi, debe comenzar con el texto -ordenes-");
+                    return;
+                }
+
+                var listaRocket = LeerPedidosDeExcelFormatoRocket(filePath);
+                pedidos.AddRange(listaRocket);
+            }
+
+            if (pedidos.Count == 0)
+            {
+                MessageBox.Show("No hay pedidos en estado pendiente.");
+                return;
+            }
+
+            dgPedidos.DataSource = pedidos;
+            dgPedidos.Invalidate();
+            dgPedidos.Refresh();
+        }
+
+        /// <summary>
+        /// Imprimir archivo con guias.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button4_Click(object sender, EventArgs e)
+        {
+
+            if (pedidos.Count == 0)
+            {
+                MessageBox.Show("No hay nada para imprimir");
+                return;
+            }
+
+            var nombreTienda = ConfigurationManager.AppSettings["NombreTienda"];
+
+            var exeLocation = AppDomain.CurrentDomain.BaseDirectory;
+            var pdfGuiasImprimir = Path.Combine(exeLocation, $"pedidos_{nombreTienda}_{DateTime.Now.ToString("ddMMyyyy")}.pdf");
+            var pdfRelacionDespacho = Path.Combine(exeLocation, $"relacionDespacho_{nombreTienda}_{DateTime.Now.ToString("ddMMyyyy")}.pdf");
+
+            this.CreatePdfReportSticker(pedidos, pdfGuiasImprimir);
+            var generador = new GeneradorFormatos();
+            generador.GenerarFormatoDespacho(pedidos, pdfRelacionDespacho);
 
 
+            // Para abrir el archivo después de generarlo
+            System.Diagnostics.Process.Start(pdfGuiasImprimir);
+            System.Diagnostics.Process.Start(pdfRelacionDespacho);
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            pedidos = new List<Pedidos>();
+            dgPedidos.DataSource = pedidos;
+        }
     }
 }
